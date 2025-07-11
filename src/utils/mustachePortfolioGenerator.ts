@@ -624,79 +624,88 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
     <!-- Section Projets -->
     <section id="projets" class="section fade-in">
       <h2 class="text-3xl font-bold mb-8 text-center">Mes projets</h2>
-      ${data.projets.length > 0 ? data.projets.map(projet => `
-      <div class="card projet" id="${projet.titre.replace(/\s+/g, '-').toLowerCase()}">
-        <h3 class="text-2xl font-bold mb-4">${projet.titre}</h3>
-        
-        <div class="projet-meta">
-          <div><strong>Type :</strong> ${projet.type}</div>
-          <div><strong>Année :</strong> ${projet.annee}</div>
-          <div><strong>Stack :</strong> ${projet.stack}</div>
-          <div><strong>Rôle :</strong> ${projet.role}</div>
-        </div>
-        
-        <div class="mb-4">
-          <p><strong class="text-lg">Problème :</strong></p>
-          <p class="mt-2">${projet.probleme}</p>
-        </div>
-        
-        ${projet.solution.length > 0 ? `
-        <div class="mb-4">
-          <p><strong class="text-lg">Solution :</strong></p>
-          <ul class="solution-list">
-            ${projet.solution.map(item => `<li>${item}</li>`).join('')}
-          </ul>
-        </div>
-        ` : ''}
-        
-        ${projet.apprentissage.length > 0 ? `
-        <div class="mb-4">
-          <p><strong class="text-lg">Ce que j'ai appris :</strong></p>
-          <ul class="apprentissage-list">
-            ${projet.apprentissage.map(item => `<li>${item}</li>`).join('')}
-          </ul>
-        </div>
-        ` : ''}
-        
-        ${projet.visuel ? `
-        <div class="projet-visuel">
-          <img src="${projet.visuel}" alt="Visuel ${projet.titre}" loading="lazy">
-        </div>
-        ` : ''}
-        
-        ${projet.files && projet.files.length > 0 ? `
-          <div class="mt-6">
-            <p><strong class="text-lg">Fichiers et ressources :</strong></p>
-            <div class="files-grid mt-3">
-              ${projet.files.map(file => {
-                if (file.type === 'youtube') {
-                  const match = file.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
-                  const videoId = match ? match[1] : '';
-                  return `
-                    <div class="w-full mb-4">
-                      <div class="font-medium mb-1">${file.label}</div>
-                      <iframe class="w-full aspect-video rounded shadow"
-                        src="https://www.youtube.com/embed/${videoId}"
-                        frameborder="0"
-                        allowfullscreen>
-                      </iframe>
-                    </div>`;
-                }
+        ${data.projets.length > 0 ? data.projets.map(projet => `
+          ${projet.collapsed ? `
+          <div x-data="{ open: false }" class="mb-6">
+            <button @click="open = !open" class="bg-gray-800 text-white px-4 py-2 rounded mb-4">
+              ${projet.titre} – Voir / Cacher
+            </button>
+            <div x-show="open" class="transition-all">
+              <div class="card projet" id="${projet.titre.replace(/\s+/g, '-').toLowerCase()}">
+          ` : `
+          <div class="card projet" id="${projet.titre.replace(/\s+/g, '-').toLowerCase()}">
+          `}
+                <h3 class="text-2xl font-bold mb-4">${projet.titre}</h3>
+                <div class="projet-meta">
+                  <div><strong>Type :</strong> ${projet.type}</div>
+                  <div><strong>Année :</strong> ${projet.annee}</div>
+                  <div><strong>Stack :</strong> ${projet.stack}</div>
+                  <div><strong>Rôle :</strong> ${projet.role}</div>
+                </div>
+                <div class="mb-4">
+                  <p><strong class="text-lg">Problème :</strong></p>
+                  <p class="mt-2">${projet.probleme}</p>
+                </div>
+                ${projet.solution.length > 0 ? `
+                <div class="mb-4">
+                  <p><strong class="text-lg">Solution :</strong></p>
+                  <ul class="solution-list">
+                    ${projet.solution.map(item => `<li>${item}</li>`).join('')}
+                  </ul>
+                </div>
+                ` : ''}
+                ${projet.apprentissage.length > 0 ? `
+                <div class="mb-4">
+                  <p><strong class="text-lg">Ce que j'ai appris :</strong></p>
+                  <ul class="apprentissage-list">
+                    ${projet.apprentissage.map(item => `<li>${item}</li>`).join('')}
+                  </ul>
+                </div>
+                ` : ''}
+                ${projet.visuel ? `
+                <div class="projet-visuel">
+                  <img src="${projet.visuel}" alt="Visuel ${projet.titre}" loading="lazy">
+                </div>
+                ` : ''}
+                ${projet.files && projet.files.length > 0 ? `
+                  <div class="mt-6">
+                    <p><strong class="text-lg">Fichiers et ressources :</strong></p>
+                    <div class="files-grid mt-3">
+                      ${projet.files.map(file => {
+                        if (file.type === 'youtube') {
+                          const match = file.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+                          const videoId = match ? match[1] : '';
+                          return `
+                            <div class="w-full mb-4">
+                              <div class="font-medium mb-1">${file.label}</div>
+                              <iframe class="w-full aspect-video rounded shadow"
+                                src="https://www.youtube.com/embed/${videoId}"
+                                frameborder="0"
+                                allowfullscreen>
+                              </iframe>
+                            </div>`;
+                        }
 
-                return `
-                  <a href="${file.url}" target="_blank" class="file-item">
-                    <div class="file-icon">${getFileIcon(file.type)}</div>
-                    <div class="flex-1">
-                      <div class="font-medium">${file.label}</div>
-                      <div class="file-type">${file.type}</div>
+                        return `
+                          <a href="${file.url}" target="_blank" class="file-item">
+                            <div class="file-icon">${getFileIcon(file.type)}</div>
+                            <div class="flex-1">
+                              <div class="font-medium">${file.label}</div>
+                              <div class="file-type">${file.type}</div>
+                            </div>
+                          </a>`;
+                      }).join('')}
                     </div>
-                  </a>`;
-              }).join('')}
+                  </div>
+                ` : ''}
+          ${projet.collapsed ? `
+              </div>
             </div>
           </div>
-        ` : ''}
-      </div>
-      `).join('') : `
+          ` : `
+          </div>
+          `}
+        `).join('') : `
       <div class="card projet">
         <div class="text-center py-12">
           <div class="text-6xl mb-4">📝</div>
