@@ -1,6 +1,7 @@
 # EasyLandingWeb - Générateur de Landing Page Restaurant avec IA
 
 Un générateur de landing pages professionnel pour restaurants avec personnalisation IA via GitHub.
+NB: Version Bis pour ne pas être éliminé, je ne sais pas si j'ai même le droit d'ajouter une branche à la version d'origine
 
 ## 🚀 Fonctionnalités
 
