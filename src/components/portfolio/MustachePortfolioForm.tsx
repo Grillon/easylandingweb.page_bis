@@ -43,6 +43,7 @@ interface MustachePortfolioReseau {
 interface MustachePortfolioData {
   nom: string;
   about: string;
+  aboutl: string;
   galerie: Array<{
     image: string;
     projet: string;
@@ -55,6 +56,7 @@ interface MustachePortfolioData {
 const initialMustachePortfolioData: MustachePortfolioData = {
   nom: '',
   about: '',
+  aboutl: '',
   galerie: [],
   projets: [],
   documents: [],
@@ -132,12 +134,12 @@ export function MustachePortfolioForm({ onPreview, onUpload }: MustachePortfolio
   };
 
   const collapseAllProjects = () => {
-    const newProjects = data.projets.map(p => ({ ...p, collapsed: true }));
+    const newProjects = (data.projets || []).map(p => ({ ...p, collapsed: true }));
     updateField('projets', newProjects);
   };
 
   const expandAllProjects = () => {
-    const newProjects = data.projets.map(p => ({ ...p, collapsed: false }));
+    const newProjects = (data.projets || []).map(p => ({ ...p, collapsed: false }));
     updateField('projets', newProjects);
   };
 
@@ -270,6 +272,15 @@ export function MustachePortfolioForm({ onPreview, onUpload }: MustachePortfolio
               <textarea
                 value={data.about}
                 onChange={(e) => updateField('about', e.target.value)}
+                placeholder="Développeur passionné par l'innovation..."
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-vertical"
+              />
+            </FormField>
+            <FormField label="À propos plus long">
+              <textarea
+                value={data.aboutl}
+                onChange={(e) => updateField('aboutl', e.target.value)}
                 placeholder="Développeur passionné par l'innovation..."
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-vertical"

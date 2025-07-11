@@ -34,6 +34,7 @@ interface MustachePortfolioReseau {
 interface MustachePortfolioData {
   nom: string;
   about: string;
+  aboutl: string;
   galerie: Array<{
     image: string;
     projet: string;
@@ -104,6 +105,16 @@ function getDocumentIcon(type: string): string {
   return getFileIcon('link');
 }
 
+function convertYouTubeUrl(url: string): string {
+  const match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+  );
+  if (match) {
+    return `<iframe class="w-full aspect-video rounded shadow" src="https://www.youtube.com/embed/${match[1]}" frameborder="0" allowfullscreen></iframe>`;
+  }
+  return `<a href="${url}" target="_blank" class="text-blue-600 underline">${url}</a>`;
+}
+
 export function generateMustachePortfolioHTML(data: MustachePortfolioData): string {
   // Générer la galerie à partir des projets qui ont un visuel
   const galerie = data.projets
@@ -114,18 +125,26 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
     }));
 
   // Classer les documents par type
-  const documentsClasses = data.documents.map(doc => {
-    const extension = doc.url.split('.').pop()?.toLowerCase() || 'link';
-    const type = ['pdf', 'doc', 'docx'].includes(extension) ? extension : 
-                 ['jpg', 'jpeg', 'png', 'gif'].includes(extension) ? 'image' :
-                 ['mp4', 'avi', 'mov'].includes(extension) ? 'video' : 'link';
-    
-    return {
-      ...doc,
-      type: type,
-      icon: getDocumentIcon(type)
-    };
-  });
+  const documentsClasses = (data.documents || []).map(doc => {
+  let type = doc.type || 'link';
+
+  if (type === 'youtube' && doc.url.includes('youtube.com')) {
+    type = 'youtube';
+  } else if (!doc.type) {
+    const extension = doc.url.split('.').pop()?.toLowerCase() || '';
+    if (['pdf', 'doc', 'docx'].includes(extension)) type = 'pdf';
+    else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) type = 'image';
+    else if (['mp4', 'avi', 'mov'].includes(extension)) type = 'video';
+    else type = 'link';
+  }
+
+  return {
+    ...doc,
+    type,
+    icon: getDocumentIcon(type)
+  };
+});
+
 
   const template = `<!DOCTYPE html>
 <html lang="fr">
@@ -134,6 +153,7 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portfolio de ${data.nom}</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs" defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -535,6 +555,7 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
 <body>
   <!-- Navigation flottante -->
   <nav class="nav-links">
+    <a href="#aboutl" class="nav-link">A propos</a>
     ${galerie.length > 0 ? '<a href="#galerie" class="nav-link">Galerie</a>' : ''}
     <a href="#projets" class="nav-link">Projets</a>
     ${documentsClasses.length > 0 ? '<a href="#documents" class="nav-link">Documents</a>' : ''}
@@ -571,6 +592,16 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
   </header>
 
   <div class="container">
+    <section id="aboutl" class="section fade-in">
+      <div class="card">
+        <div class="projet">
+          <h2 class="text-3xl font-bold mb-4 text-center">À propos</h2>
+          <p class="text-lg leading-relaxed text-left max-w-prose mx-auto">
+            ${data.aboutl}
+          </p>
+        </div>
+      </div>
+    </section>
     ${galerie.length > 0 ? `
     <!-- Section Galerie -->
     <section id="galerie" class="section fade-in">
@@ -634,20 +665,35 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
         ` : ''}
         
         ${projet.files && projet.files.length > 0 ? `
-        <div class="mt-6">
-          <p><strong class="text-lg">Fichiers et ressources :</strong></p>
-          <div class="files-grid mt-3">
-            ${projet.files.map(file => `
-            <a href="${file.url}" target="_blank" class="file-item">
-              <div class="file-icon">${getFileIcon(file.type)}</div>
-              <div class="flex-1">
-                <div class="font-medium">${file.label}</div>
-                <div class="file-type">${file.type}</div>
-              </div>
-            </a>
-            `).join('')}
+          <div class="mt-6">
+            <p><strong class="text-lg">Fichiers et ressources :</strong></p>
+            <div class="files-grid mt-3">
+              ${projet.files.map(file => {
+                if (file.type === 'youtube') {
+                  const match = file.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+                  const videoId = match ? match[1] : '';
+                  return `
+                    <div class="w-full mb-4">
+                      <div class="font-medium mb-1">${file.label}</div>
+                      <iframe class="w-full aspect-video rounded shadow"
+                        src="https://www.youtube.com/embed/${videoId}"
+                        frameborder="0"
+                        allowfullscreen>
+                      </iframe>
+                    </div>`;
+                }
+
+                return `
+                  <a href="${file.url}" target="_blank" class="file-item">
+                    <div class="file-icon">${getFileIcon(file.type)}</div>
+                    <div class="flex-1">
+                      <div class="font-medium">${file.label}</div>
+                      <div class="file-type">${file.type}</div>
+                    </div>
+                  </a>`;
+              }).join('')}
+            </div>
           </div>
-        </div>
         ` : ''}
       </div>
       `).join('') : `
@@ -668,15 +714,25 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
         <div class="projet">
           <h2 class="text-3xl font-bold mb-6 text-center">Documents à partager</h2>
           <div class="documents-grid">
-            ${documentsClasses.map(doc => `
-            <a href="${doc.url}" target="_blank" class="document-item">
-              <div class="document-icon">${doc.icon}</div>
-              <div class="flex-1">
-                <div class="font-medium">${doc.nom}</div>
-                <div class="document-type">${doc.type}</div>
-              </div>
-            </a>
-            `).join('')}
+            ${documentsClasses.map(doc => {
+              if (doc.type === 'youtube' && doc.url.includes('youtube.com/embed/')) {
+                return `
+                  <div class="w-full mb-4">
+                    <iframe class="w-full aspect-video rounded shadow"
+                      src="${doc.url}"
+                      frameborder="0" allowfullscreen></iframe>
+                  </div>`;
+              }
+
+              return `
+                <a href="${doc.url}" target="_blank" class="document-item">
+                  <div class="document-icon">${doc.icon}</div>
+                  <div class="flex-1">
+                    <div class="font-medium">${doc.nom}</div>
+                    <div class="document-type">${doc.type}</div>
+                  </div>
+                </a>`;
+            }).join('')}
           </div>
         </div>
       </div>
@@ -738,7 +794,7 @@ export function generateMustachePortfolioHTML(data: MustachePortfolioData): stri
     }, observerOptions);
 
     document.querySelectorAll('.fade-in').forEach(el => {
-      el.style.opacity = '0';
+      el.style.opacity = '1';
       el.style.transform = 'translateY(20px)';
       el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
       observer.observe(el);
